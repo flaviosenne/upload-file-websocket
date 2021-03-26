@@ -1,29 +1,43 @@
 const url = require('url')
+const UploadHandler = require('./uploadHandler')
+const { pipelineAsync, logger} = require('./util')
+
 class Routes {
     #io
 
-    constructor(io){
+    options(req, res){
+        res.writeHead(204, {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'OPTIONS, POST'
+        }).end()
+    }
+    constructor(io) {
         this.#io = io
     }
 
-    async post(req, res){
+    async post(req, res) {
 
-        const { headers} = req
-        const {query: {socketId}} = url.parse(req.url, true)
-        console.log('chamou', socketId)
+        const { headers } = req
+        const { query: { socketId } } = url.parse(req.url, true)
 
-
-        this.#io.to(socketId).emit('file-uploaded', 5e9)
-        this.#io.to(socketId).emit('file-uploaded', 5e9)
-        this.#io.to(socketId).emit('file-uploaded', 5e9)
-        this.#io.to(socketId).emit('file-uploaded', 5e9)
+        const upload = new UploadHandler(this.#io, socketId)
         
-         setTimeout(() => { 
-             return res.writeHead(303, {
+        const onFinish = (res, redirectTo) => () => {
+            res.writeHead(303, {
                 Connection: 'close',
-                Location : `${headers.origin}?msg=Files uploaded with success!`
-             }).end()
-         }, 2000)
+                Location: `${redirectTo}?msg=Files uploaded with success!`
+            }).end()
+        }
+
+        const busboyInstance = upload.registerEvents(headers, onFinish(res, headers.origin))
+
+        await pipelineAsync(
+            req,
+            busboyInstance
+        )
+
+        logger.info('Request finished with success')
+
     }
 }
 
