@@ -3,11 +3,12 @@ const socketIo = require('socket.io')
 const Routes = require('./routes')
 const PORT = 3000
 
+
 const handler = function(req, res){
-    const defaultroute = async (req, res) => res.end('Hello')
+    const defaultRoute = async (req, res) => res.end('Hello')
     
     const routes = new Routes(io)
-    const chosen = routes[req.method.toLowerCase()] || defaultroute
+    const chosen = routes[req.method.toLowerCase()] || defaultRoute
     
     return chosen.apply(routes, [req, res])    
     

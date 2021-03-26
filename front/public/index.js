@@ -25,9 +25,25 @@ const configureForm = (targetUrl) => {
     form.action = targetUrl
 }
 
+const updateMessage = (message) => {
+    const msg = document.getElementById('msg')
+    msg.innerText = message
+
+    msg.classList.add('alert', 'alert-success')
+    setTimeout(() => {
+        msg.hidden = true
+    },3000)
+}
+const showMessage = () => {
+    const urlparams = new URLSearchParams(window.location.search)
+    const serverMessage = urlparams.get('msg')
+    if(!serverMessage) return
+
+    updateMessage(serverMessage)
+}
 
 const onload = () => {
-    
+    showMessage()
 const ioClient = io.connect(API_URL, {
         withCredentials: false
     })
